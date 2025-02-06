@@ -6,5 +6,8 @@ $strategies['pavlov'] = function ($data) {
         return MOVE_SPLIT;
     }
     $lastRound = end($data);
-    return ($lastRound['outcome'] === 'win') ? $lastRound['my_move'] : (($lastRound['my_move'] === MOVE_SPLIT) ? MOVE_STEAL : MOVE_SPLIT);
+    $myScore = $lastRound['my_score'];
+    $opponentScore = $lastRound['opponent_score'];
+    $outcome = ($myScore > $opponentScore) ? 'win' : 'lose';
+    return ($outcome === 'win') ? $lastRound['my_move'] : (($lastRound['my_move'] === MOVE_SPLIT) ? MOVE_STEAL : MOVE_SPLIT);
 };
