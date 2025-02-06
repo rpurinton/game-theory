@@ -98,12 +98,12 @@ function runTournament($activeStrategies, $tournamentsCount, $roundsCount)
                     ];
                 } // rounds loop
 
-                echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
+                //echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
                 $totalScoreA += $scoreA;
                 $totalScoreB += $scoreB;
             } // tournaments loop
 
-            echo " Aggregate result for $nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n\n";
+            echo "$nameA total: $totalScoreA, $nameB total: $totalScoreB\n";
             // Update overall results – note that each matchup contributes to both strategies' totals.
             $overallResults[$nameA] += $totalScoreA;
             $overallResults[$nameB] += $totalScoreB;
