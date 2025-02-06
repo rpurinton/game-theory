@@ -38,7 +38,7 @@ $headToHeadResults = [];
 foreach ($strategyNames as $nameA) {
     foreach ($strategyNames as $nameB) {
         // For reporting a head-to-head match
-        echo "Matchup: $nameA vs $nameB\n";
+        //echo "Matchup: $nameA vs $nameB\n";
         // Initialize aggregate scores for this pair over $tournamentsCount tournaments.
         $totalScoreA = 0;
         $totalScoreB = 0;
@@ -100,7 +100,7 @@ foreach ($strategyNames as $nameA) {
             $totalScoreB += $scoreB;
         } // end tournament
 
-        echo " Aggregate result for $nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n\n";
+        echo "$nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n";
         // Add aggregate scores to overall results.
         $overallResults[$nameA] += $totalScoreA;
         $overallResults[$nameB] += $totalScoreB;
