@@ -98,7 +98,7 @@ foreach ($strategyNames as $nameA) {
             $totalScoreB += $scoreB;
         } // end tournament
 
-        echo "$nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n";
+        echo "$nameA total: $totalScoreA, $nameB total: $totalScoreB\n";
         // Add aggregate scores to overall results.
         $overallResults[$nameA] += $totalScoreA;
         $overallResults[$nameB] += $totalScoreB;
