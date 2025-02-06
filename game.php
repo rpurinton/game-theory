@@ -1,11 +1,11 @@
 <?php
 // main.php – run from the CLI
 
-// Define our moves enum
+// Define our move ENUM values
 define('MOVE_SPLIT', 'split');
 define('MOVE_STEAL', 'steal');
 
-// Number of tournaments and rounds per tournament
+// Number of tournaments and rounds per tournament for each matchup
 $tournamentsCount = 5;
 $roundsCount = 200;
 
@@ -24,99 +24,135 @@ if (empty($strategies)) {
     exit(1);
 }
 
-// Store overall results: [ 'strategy' => total_points ]
-$overallResults = [];
-$strategyNames = array_keys($strategies);
-foreach ($strategyNames as $name) {
-    $overallResults[$name] = 0;
-}
-
-// Tournament head-to-head results: we will accumulate detailed results if desired.
-$headToHeadResults = [];
-
-// Run every strategy against every other strategy (including self match)
-foreach ($strategyNames as $nameA) {
-    foreach ($strategyNames as $nameB) {
-        // For reporting a head-to-head match
-        //echo "Matchup: $nameA vs $nameB\n";
-        // Initialize aggregate scores for this pair over $tournamentsCount tournaments.
-        $totalScoreA = 0;
-        $totalScoreB = 0;
-        for ($tournament = 1; $tournament <= $tournamentsCount; $tournament++) {
-            // Initialize history and scores for each tournament match.
-            $historyA = []; // History from perspective of player A
-            $historyB = []; // History from perspective of player B
-            $scoreA = 0;
-            $scoreB = 0;
-            // Run rounds
-            for ($round = 1; $round <= $roundsCount; $round++) {
-                // Each strategy decision is based ONLY on its own history.
-                // It receives an array of rounds. For round i, each round is an associative array:
-                // [ 'round' => <round number>, 'my_move' => <their move>, 'opponent_move' => <opponent move>, 'my_score' => <cumulative score>, 'opponent_score' => <opponent cumulative score> ]
-                $moveA = call_user_func($strategies[$nameA], $historyA);
-                $moveB = call_user_func($strategies[$nameB], $historyB);
-                // Validate moves: they should be either MOVE_SPLIT or MOVE_STEAL
-                if (!in_array($moveA, [MOVE_SPLIT, MOVE_STEAL])) {
-                    echo "Strategy '$nameA' returned invalid move '$moveA'. Defaulting to steal.\n";
-                    $moveA = MOVE_STEAL;
-                }
-                if (!in_array($moveB, [MOVE_SPLIT, MOVE_STEAL])) {
-                    echo "Strategy '$nameB' returned invalid move '$moveB'. Defaulting to steal.\n";
-                    $moveB = MOVE_STEAL;
-                }
-                // Compute outcome for this round
-                if ($moveA === MOVE_SPLIT && $moveB === MOVE_SPLIT) {
-                    $scoreA += 3;
-                    $scoreB += 3;
-                } elseif ($moveA === MOVE_SPLIT && $moveB === MOVE_STEAL) {
-                    $scoreA += 0;
-                    $scoreB += 5;
-                } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_SPLIT) {
-                    $scoreA += 5;
-                    $scoreB += 0;
-                } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_STEAL) {
-                    $scoreA += 1;
-                    $scoreB += 1;
-                }
-                // Append the round result to each player’s history.
-                $historyA[] = [
-                    'round' => $round,
-                    'my_move' => $moveA,
-                    'opponent_move' => $moveB,
-                    'my_score' => $scoreA,
-                    'opponent_score' => $scoreB,
-                ];
-                // For player B, swap the roles.
-                $historyB[] = [
-                    'round' => $round,
-                    'my_move' => $moveB,
-                    'opponent_move' => $moveA,
-                    'my_score' => $scoreB,
-                    'opponent_score' => $scoreA,
-                ];
-            } // end rounds
-            //echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
-            $totalScoreA += $scoreA;
-            $totalScoreB += $scoreB;
-        } // end tournament
-
-        echo "$nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n";
-        // Add aggregate scores to overall results.
-        $overallResults[$nameA] += $totalScoreA;
-        $overallResults[$nameB] += $totalScoreB;
-        // Optionally record head-to-head details.
-        $headToHeadResults["$nameA vs $nameB"] = [
-            'strategyA' => $nameA,
-            'scoreA' => $totalScoreA,
-            'strategyB' => $nameB,
-            'scoreB' => $totalScoreB
-        ];
+// Function to run a full round-robin tournament among the provided strategies.
+// Returns an associative array of overall scores, with keys as strategy names.
+function runTournament($activeStrategies, $tournamentsCount, $roundsCount)
+{
+    $strategyNames = array_keys($activeStrategies);
+    // Initialize overall results for this tournament run.
+    $overallResults = [];
+    foreach ($strategyNames as $name) {
+        $overallResults[$name] = 0;
     }
+
+    // Run every strategy vs every other strategy (including self-match)
+    foreach ($strategyNames as $nameA) {
+        foreach ($strategyNames as $nameB) {
+            //echo "Matchup: $nameA vs $nameB\n";
+
+            $totalScoreA = 0;
+            $totalScoreB = 0;
+
+            // For each tournament
+            for ($tournament = 1; $tournament <= $tournamentsCount; $tournament++) {
+                // Reset histories and scores for each tournament
+                $historyA = []; // history for player A perspective
+                $historyB = []; // history for player B perspective
+                $scoreA = 0;
+                $scoreB = 0;
+
+                // Run the rounds within one tournament
+                for ($round = 1; $round <= $roundsCount; $round++) {
+                    // Each strategy decides based solely on its history.
+                    $moveA = call_user_func($activeStrategies[$nameA], $historyA);
+                    $moveB = call_user_func($activeStrategies[$nameB], $historyB);
+
+                    // Validate moves
+                    if (!in_array($moveA, [MOVE_SPLIT, MOVE_STEAL])) {
+                        die("Strategy '$nameA' returned invalid move '$moveA'. Defaulting to steal.");
+                    }
+                    if (!in_array($moveB, [MOVE_SPLIT, MOVE_STEAL])) {
+                        die("Strategy '$nameB' returned invalid move '$moveB'. Defaulting to steal.");
+                    }
+
+                    // Evaluate the outcome for this round
+                    if ($moveA === MOVE_SPLIT && $moveB === MOVE_SPLIT) {
+                        $scoreA += 3;
+                        $scoreB += 3;
+                    } elseif ($moveA === MOVE_SPLIT && $moveB === MOVE_STEAL) {
+                        $scoreA += 0;
+                        $scoreB += 5;
+                    } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_SPLIT) {
+                        $scoreA += 5;
+                        $scoreB += 0;
+                    } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_STEAL) {
+                        $scoreA += 1;
+                        $scoreB += 1;
+                    }
+
+                    // Record the round result for each strategy
+                    $historyA[] = [
+                        'round' => $round,
+                        'my_move' => $moveA,
+                        'opponent_move' => $moveB,
+                        'my_score' => $scoreA,
+                        'opponent_score' => $scoreB,
+                    ];
+
+                    $historyB[] = [
+                        'round' => $round,
+                        'my_move' => $moveB,
+                        'opponent_move' => $moveA,
+                        'my_score' => $scoreB,
+                        'opponent_score' => $scoreA,
+                    ];
+                } // rounds loop
+
+                echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
+                $totalScoreA += $scoreA;
+                $totalScoreB += $scoreB;
+            } // tournaments loop
+
+            echo " Aggregate result for $nameA vs $nameB: $nameA total: $totalScoreA, $nameB total: $totalScoreB\n\n";
+            // Update overall results – note that each matchup contributes to both strategies' totals.
+            $overallResults[$nameA] += $totalScoreA;
+            $overallResults[$nameB] += $totalScoreB;
+        }
+    }
+
+    // Display overall results for this elimination round.
+    echo "Results for this elimination round:\n";
+    arsort($overallResults);
+    foreach ($overallResults as $strategyName => $score) {
+        echo "  Strategy '$strategyName' total score: $score\n";
+    }
+    echo "\n";
+
+    return $overallResults;
 }
 
-// Print overall results for each strategy.
-echo "Overall Results:\n";
-arsort($overallResults);
-foreach ($overallResults as $strategyName => $score) {
-    echo "  Strategy '$strategyName' total score: $score\n";
+// Begin elimination rounds.
+// Start with all loaded strategies.
+$activeStrategies = $strategies;
+$roundNumber = 1;
+
+// Continue eliminating until only one strategy remains.
+while (count($activeStrategies) > 1) {
+    echo "=========================================\n";
+    echo "Elimination Round: $roundNumber with " . count($activeStrategies) . " strategies\n";
+    echo "=========================================\n\n";
+
+    // Run the tournament for current set of strategies.
+    $results = runTournament($activeStrategies, $tournamentsCount, $roundsCount);
+
+    // Identify the strategy with the lowest score.
+    $worstStrategy = null;
+    $lowestScore = null;
+    foreach ($results as $name => $score) {
+        if ($lowestScore === null || $score < $lowestScore) {
+            $lowestScore = $score;
+            $worstStrategy = $name;
+        }
+    }
+
+    echo "Eliminating strategy: '$worstStrategy' with score: $lowestScore\n\n";
+
+    // Remove the worst strategy from the active strategies.
+    unset($activeStrategies[$worstStrategy]);
+
+    $roundNumber++;
 }
+
+echo "=========================================\n";
+echo "Final Winner: " . array_keys($activeStrategies)[0] . "\n";
+echo "=========================================\n";
