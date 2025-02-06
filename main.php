@@ -32,7 +32,7 @@ foreach ($strategyNames as $name) {
 }
 
 // Tournament head-to-head results: we will accumulate detailed results if desired.
-$headToHeadResults = []; 
+$headToHeadResults = [];
 
 // Run every strategy against every other strategy (including self match)
 foreach ($strategyNames as $nameA) {
@@ -68,16 +68,13 @@ foreach ($strategyNames as $nameA) {
                 if ($moveA === MOVE_SPLIT && $moveB === MOVE_SPLIT) {
                     $scoreA += 3;
                     $scoreB += 3;
-                }
-                elseif ($moveA === MOVE_SPLIT && $moveB === MOVE_STEAL) {
+                } elseif ($moveA === MOVE_SPLIT && $moveB === MOVE_STEAL) {
                     $scoreA += 0;
                     $scoreB += 5;
-                }
-                elseif ($moveA === MOVE_STEAL && $moveB === MOVE_SPLIT) {
+                } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_SPLIT) {
                     $scoreA += 5;
                     $scoreB += 0;
-                }
-                elseif ($moveA === MOVE_STEAL && $moveB === MOVE_STEAL) {
+                } elseif ($moveA === MOVE_STEAL && $moveB === MOVE_STEAL) {
                     $scoreA += 1;
                     $scoreB += 1;
                 }
@@ -98,7 +95,7 @@ foreach ($strategyNames as $nameA) {
                     'opponent_score' => $scoreA,
                 ];
             } // end rounds
-            echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
+            //echo " Tournament $tournament result: $nameA scored $scoreA, $nameB scored $scoreB\n";
             $totalScoreA += $scoreA;
             $totalScoreB += $scoreB;
         } // end tournament
