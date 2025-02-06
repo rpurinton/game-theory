@@ -138,11 +138,22 @@ while (count($activeStrategies) > 1) {
     // Identify the strategy with the lowest score.
     $worstStrategy = null;
     $lowestScore = null;
+    $allSameScore = true;
+    $firstScore = reset($results);
+
     foreach ($results as $name => $score) {
         if ($lowestScore === null || $score < $lowestScore) {
             $lowestScore = $score;
             $worstStrategy = $name;
         }
+        if ($score !== $firstScore) {
+            $allSameScore = false;
+        }
+    }
+
+    if ($allSameScore) {
+        echo "All remaining strategies have the same score. Ending tournament.\n";
+        break;
     }
 
     echo "Eliminating strategy: '$worstStrategy' with score: $lowestScore\n\n";
@@ -154,5 +165,8 @@ while (count($activeStrategies) > 1) {
 }
 
 echo "=========================================\n";
-echo "Final Winner: " . array_keys($activeStrategies)[0] . "\n";
+echo "Final Remaining Strategies:\n";
+foreach (array_keys($activeStrategies) as $strategyName) {
+    echo "  $strategyName\n";
+}
 echo "=========================================\n";
