@@ -11,8 +11,13 @@ $strategies['adaptive'] = function ($data) {
         $opponentScore += $round['opponent_move'] === MOVE_SPLIT ? 1 : 0;
     }
 
-    $myAverage = $myScore / count($lastRounds);
-    $opponentAverage = $opponentScore / count($lastRounds);
+    $roundCount = count($lastRounds);
+    if ($roundCount === 0) {
+        return MOVE_SPLIT; // Default move if there are no rounds
+    }
+
+    $myAverage = $myScore / $roundCount;
+    $opponentAverage = $opponentScore / $roundCount;
 
     return ($myAverage < $opponentAverage) ? MOVE_STEAL : MOVE_SPLIT;
 };
